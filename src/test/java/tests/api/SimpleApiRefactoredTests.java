@@ -1,5 +1,6 @@
 package tests.api;
 
+import io.qameta.allure.restassured.AllureRestAssured;
 import io.restassured.RestAssured;
 import io.restassured.filter.log.RequestLoggingFilter;
 import io.restassured.filter.log.ResponseLoggingFilter;
@@ -8,6 +9,9 @@ import models.fakeapiusers.*;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.ValueSource;
+import utils.CustomTpl;
 
 import java.util.*;
 import java.util.stream.Collectors;
@@ -18,7 +22,8 @@ public class SimpleApiRefactoredTests {
     @BeforeAll
     public static void setUp(){
         RestAssured.baseURI = "https://fakestoreapi.com";
-        RestAssured.filters(new RequestLoggingFilter(), new ResponseLoggingFilter());
+        RestAssured.filters(new RequestLoggingFilter(), new ResponseLoggingFilter(),
+                CustomTpl.customLogFilter().withCustomTemplates());
 
     }
 
@@ -29,9 +34,9 @@ public class SimpleApiRefactoredTests {
                 .statusCode(200);
     }
 
-    @Test
-    public void getSingleUserTest(){
-        int userId = 5;
+    @ParameterizedTest
+    @ValueSource(ints = {1, 5, 10})
+    public void getSingleUserTest(int userId){
         UserRoot response = given()
                 .pathParam("userId", userId)
                 .get("/users/{userId}")
@@ -42,9 +47,10 @@ public class SimpleApiRefactoredTests {
         Assertions.assertTrue(response.getAddress().getZipcode().matches("\\d{5}-\\d{4}"));
     }
 
-    @Test
-    public void getAllUsersWithLimitTest(){
-        int limitSize = 5;
+
+    @ParameterizedTest
+    @ValueSource(ints = {1, 10,})
+    public void getAllUsersWithLimitTest(int limitSize){
         List<UserRoot> users = given()
                 .queryParam("limit", limitSize)
                 .get("/users")
@@ -52,7 +58,21 @@ public class SimpleApiRefactoredTests {
                 .statusCode(200)
                 .extract()
                 .jsonPath().getList("", UserRoot.class);
-        Assertions.assertEquals(5,users.size());
+        Assertions.assertEquals(limitSize,users.size());
+    }
+
+    @ParameterizedTest
+    @ValueSource(ints = {0, 40})
+    public void getAllUsersWithLimitTestErrorParams(int limitSize){
+        List<UserRoot> users = given()
+                .queryParam("limit", limitSize)
+                .get("/users")
+                .then()
+                .statusCode(200)
+                .extract()
+                .jsonPath().getList("", UserRoot.class);
+        Assertions.assertNotEquals(limitSize,users.size());
+
     }
 
     @Test
