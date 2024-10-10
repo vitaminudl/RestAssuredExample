@@ -1,6 +1,7 @@
 plugins {
     id 'java'
     id "io.freefair.lombok" version "8.10.2"
+    id "io.qameta.allure" version "2.12.0"
 }
 
 group = 'org.example'
@@ -14,6 +15,8 @@ dependencies {
     testImplementation platform('org.junit:junit-bom:5.10.0')
     testImplementation 'org.junit.jupiter:junit-jupiter'
     testImplementation 'com.fasterxml.jackson.core:jackson-databind:2.16.1'
+    testImplementation 'io.rest-assured:rest-assured:5.4.0'
+    testImplementation 'io.qameta.allure:allure-rest-assured:2.20.1'
 }
 
 test {
